@@ -20,10 +20,10 @@ class ApiService {
     }
   }
 
-  Future getEmployeeDetails() async {
+  Future getEmployeeDetails({int? pageNum}) async {
     try {
       final response = await client
-          .getUri(Uri.parse('https://reqres.in/api/users?per_page=12'));
+          .getUri(Uri.parse('https://reqres.in/api/users?page=$pageNum'));
 
       return [true, response.data];
     } on DioError catch (e) {

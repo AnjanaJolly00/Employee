@@ -8,7 +8,8 @@ class MainCubit extends Cubit<MainState> {
   MainCubit([MainState? initialState]) : super(initialState ?? InitialState());
   final client = Dio();
   final ApiService _apiService = ApiService();
-
+  int pageNum = 1;
+  bool canLoadMore = true;
   List<Employee> employeeDetails = [];
 
   Future login({String? email, String? password}) async {
@@ -21,11 +22,19 @@ class MainCubit extends Cubit<MainState> {
     }
   }
 
-  Future getEmployeeDetails({isLoading = false}) async {
+  Future getEmployeeDetails({loadMore = false}) async {
+    if (loadMore && canLoadMore) {
+      pageNum++;
+    }
     emit(GetEmployeeLoadingState());
-    var apiresponse = await _apiService.getEmployeeDetails();
+    var apiresponse = await _apiService.getEmployeeDetails(pageNum: pageNum);
     if (apiresponse[0] == true) {
-      employeeDetails = EmployeeApiResponse.fromMap(apiresponse[1]).employee!;
+      employeeDetails
+          .addAll(EmployeeApiResponse.fromMap(apiresponse[1]).employee!);
+      if (EmployeeApiResponse.fromMap(apiresponse[1]).total! ==
+          employeeDetails.length) {
+        canLoadMore = false;
+      }
       emit(GetEmployeeDetailsSuccessState());
     } else {
       emit(GetEmployeeDetailsFailureState(errorMsg: apiresponse[1]['error']));

@@ -21,6 +21,7 @@ class EmployeeScreen extends StatefulWidget {
 class _EmployeeScreenState extends State<EmployeeScreen> {
   late MainCubit _cubit;
   AppLoader appLoader = AppLoader();
+  bool isLoading = false;
   @override
   void initState() {
     _cubit = context.read<MainCubit>();
@@ -51,6 +52,7 @@ class _EmployeeScreenState extends State<EmployeeScreen> {
             appLoader.show(context);
             return;
           } else if (state is GetEmployeeDetailsSuccessState) {
+            isLoading = false;
             appLoader.hide(context);
           } else if (state is GetEmployeeDetailsFailureState) {
             appLoader.hide(context);
@@ -63,23 +65,52 @@ class _EmployeeScreenState extends State<EmployeeScreen> {
 
   Widget body() {
     return Container(
-      margin: const EdgeInsets.all(10),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemBuilder: (context, index) {
-          var item = _cubit.employeeDetails[index];
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListTile(
-                leading: Image.network(item.avatar!),
-                title: Text('${item.firstName} ${item.lastName}'),
-                subtitle: Text(item.email!),
-              ),
-            ),
-          );
-        },
-        itemCount: _cubit.employeeDetails.length,
+      margin: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+                itemBuilder: (context, index) {
+                  var item = _cubit.employeeDetails[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ListTile(
+                        leading: Image.network(item.avatar!),
+                        title: Text('${item.firstName} ${item.lastName}'),
+                        subtitle: Text(item.email!),
+                      ),
+                    ),
+                  );
+                },
+                itemCount: _cubit.employeeDetails.length),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          _cubit.canLoadMore == false
+              ? const SizedBox(
+                  height: 0,
+                )
+              : isLoading
+                  ? const CircularProgressIndicator(
+                      color: AppWidgets.themeColor,
+                    )
+                  : AppWidgets.elevatedButton(
+                      buttonName: 'Load More',
+                      onPressed: () {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        _cubit.getEmployeeDetails(loadMore: true);
+                      },
+                      color: Colors.transparent,
+                      width: double.infinity,
+                      height: 20,
+                      fontSize: 18,
+                      textColor: AppWidgets.textColor,
+                    )
+        ],
       ),
     );
   }
